@@ -25,6 +25,7 @@ SmartMenu 是一个本地料理配方管理应用。V1.0 聚焦于一个核心�
 - 核心计算、校验、仓储与数据库集成测试
 - SQLite 外键约束与级联删除校验
 - 基础页面联调与文档收尾
+- Android 端 SQLite 启动链路修复，使用仓库内 `third_party/sqlite/` 源码本地编译
 
 ## 当前能力范围
 
@@ -61,6 +62,9 @@ flutter analyze
 flutter test
 ```
 
+其中 Android 构建会直接使用仓库内的 `third_party/sqlite/sqlite-amalgamation-3500200/sqlite3.c`
+生成本地 SQLite 动态库，不再依赖外网下载预编译二进制。
+
 ## PowerShell 脚本
 
 仓库内提供了便于本地使用的脚本：
@@ -77,7 +81,7 @@ flutter test
 已完成以下检查：
 
 - `flutter analyze`
-- `flutter test`
 - 仓储保存/更新/搜索/删除级联集成测试
 - 核心校验与动态比例计算测试
 - 应用启动进入配方列表页验证
+- Android 模拟器首页空状态验证
