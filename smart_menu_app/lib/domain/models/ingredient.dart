@@ -23,8 +23,7 @@ abstract class Ingredient with _$Ingredient {
     required IngredientType type,
     @Default(true) bool scalable,
     @Default(PrecisionOption.one) PrecisionOption precision,
-    @Default(IngredientRoundingMode.floor)
-    IngredientRoundingMode roundingMode,
+    @Default(IngredientRoundingMode.floor) IngredientRoundingMode roundingMode,
     @Default(0) int sortOrder,
     @Default('') String remark,
   }) = _Ingredient;

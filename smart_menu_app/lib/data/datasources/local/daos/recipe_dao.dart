@@ -34,8 +34,9 @@ class RecipeDao extends DatabaseAccessor<AppDatabase> with _$RecipeDaoMixin {
   }
 
   Future<RecipeEntity?> getRecipeById(String id) {
-    return (select(recipeEntities)..where((table) => table.id.equals(id)))
-        .getSingleOrNull();
+    return (select(
+      recipeEntities,
+    )..where((table) => table.id.equals(id))).getSingleOrNull();
   }
 
   Future<void> upsertRecipe(RecipeEntitiesCompanion recipe) async {

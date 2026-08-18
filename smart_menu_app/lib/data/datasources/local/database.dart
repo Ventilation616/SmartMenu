@@ -23,16 +23,8 @@ LazyDatabase _openConnection() {
 }
 
 @DriftDatabase(
-  tables: <Type>[
-    RecipeEntities,
-    IngredientEntities,
-    CookingStepEntities,
-  ],
-  daos: <Type>[
-    RecipeDao,
-    IngredientDao,
-    CookingStepDao,
-  ],
+  tables: <Type>[RecipeEntities, IngredientEntities, CookingStepEntities],
+  daos: <Type>[RecipeDao, IngredientDao, CookingStepDao],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());

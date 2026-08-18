@@ -5,11 +5,7 @@ import 'package:smart_menu_app/app/app.dart';
 
 void main() {
   testWidgets('app starts with recipe list page', (WidgetTester tester) async {
-    await tester.pumpWidget(
-      const ProviderScope(
-        child: SmartMenuApp(),
-      ),
-    );
+    await tester.pumpWidget(const ProviderScope(child: SmartMenuApp()));
     await tester.pumpAndSettle();
 
     expect(find.text('我的配方'), findsOneWidget);

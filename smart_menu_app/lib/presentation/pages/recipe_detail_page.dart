@@ -5,10 +5,7 @@ import '../../app/routes.dart';
 import '../../core/constants/app_strings.dart';
 
 class RecipeDetailPage extends StatelessWidget {
-  const RecipeDetailPage({
-    required this.recipeId,
-    super.key,
-  });
+  const RecipeDetailPage({required this.recipeId, super.key});
 
   final String recipeId;
 
@@ -29,8 +26,7 @@ class RecipeDetailPage extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push(
-          AppRoutePath.recipeEdit
-              .replaceFirst(':recipeId', recipeId),
+          AppRoutePath.recipeEdit.replaceFirst(':recipeId', recipeId),
         ),
         icon: const Icon(Icons.edit_outlined),
         label: const Text('编辑'),

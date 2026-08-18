@@ -6,3 +6,7 @@ class AppException implements Exception {
   @override
   String toString() => 'AppException: $message';
 }
+
+class ValidationException extends AppException {
+  ValidationException(super.message);
+}

@@ -18,9 +18,9 @@ class CookingStepDao extends DatabaseAccessor<AppDatabase>
     String recipeId,
     List<CookingStepEntitiesCompanion> cookingSteps,
   ) async {
-    await (delete(cookingStepEntities)
-          ..where((table) => table.recipeId.equals(recipeId)))
-        .go();
+    await (delete(
+      cookingStepEntities,
+    )..where((table) => table.recipeId.equals(recipeId))).go();
 
     if (cookingSteps.isEmpty) {
       return;

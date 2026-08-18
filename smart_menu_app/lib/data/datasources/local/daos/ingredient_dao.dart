@@ -18,9 +18,9 @@ class IngredientDao extends DatabaseAccessor<AppDatabase>
     String recipeId,
     List<IngredientEntitiesCompanion> ingredients,
   ) async {
-    await (delete(ingredientEntities)
-          ..where((table) => table.recipeId.equals(recipeId)))
-        .go();
+    await (delete(
+      ingredientEntities,
+    )..where((table) => table.recipeId.equals(recipeId))).go();
 
     if (ingredients.isEmpty) {
       return;

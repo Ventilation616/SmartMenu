@@ -3,10 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/constants/app_strings.dart';
 
 class RecipeEditPage extends StatelessWidget {
-  const RecipeEditPage({
-    required this.recipeId,
-    super.key,
-  });
+  const RecipeEditPage({required this.recipeId, super.key});
 
   final String recipeId;
 
@@ -37,10 +34,7 @@ class RecipeEditPage extends StatelessWidget {
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: FilledButton(
-                onPressed: () {},
-                child: const Text('保存'),
-              ),
+              child: FilledButton(onPressed: () {}, child: const Text('保存')),
             ),
           ],
         ),
