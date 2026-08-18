@@ -438,7 +438,7 @@ class $IngredientEntitiesTable extends IngredientEntities
     type: DriftSqlType.string,
     requiredDuringInsert: true,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES recipes (id)',
+      'REFERENCES recipes (id) ON DELETE CASCADE',
     ),
   );
   static const VerificationMeta _nameMeta = const VerificationMeta('name');
@@ -1090,7 +1090,7 @@ class $CookingStepEntitiesTable extends CookingStepEntities
     type: DriftSqlType.string,
     requiredDuringInsert: true,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES recipes (id)',
+      'REFERENCES recipes (id) ON DELETE CASCADE',
     ),
   );
   static const VerificationMeta _stepNoMeta = const VerificationMeta('stepNo');
@@ -1448,6 +1448,23 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     ingredientEntities,
     cookingStepEntities,
   ];
+  @override
+  StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'recipes',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('ingredients', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'recipes',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('cooking_steps', kind: UpdateKind.delete)],
+    ),
+  ]);
 }
 
 typedef $$RecipeEntitiesTableCreateCompanionBuilder =

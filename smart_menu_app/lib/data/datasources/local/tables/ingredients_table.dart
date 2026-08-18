@@ -8,7 +8,8 @@ class IngredientEntities extends Table {
 
   TextColumn get id => text()();
 
-  TextColumn get recipeId => text().references(RecipeEntities, #id)();
+  TextColumn get recipeId =>
+      text().references(RecipeEntities, #id, onDelete: KeyAction.cascade)();
 
   TextColumn get name => text()();
 

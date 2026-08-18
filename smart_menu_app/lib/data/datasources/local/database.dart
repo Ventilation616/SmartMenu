@@ -27,7 +27,14 @@ LazyDatabase _openConnection() {
   daos: <Type>[RecipeDao, IngredientDao, CookingStepDao],
 )
 class AppDatabase extends _$AppDatabase {
-  AppDatabase() : super(_openConnection());
+  AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+    beforeOpen: (details) async {
+      await customStatement('PRAGMA foreign_keys = ON');
+    },
+  );
 
   @override
   int get schemaVersion => 1;
