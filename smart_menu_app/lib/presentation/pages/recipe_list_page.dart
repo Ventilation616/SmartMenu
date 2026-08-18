@@ -54,14 +54,19 @@ class _RecipeListPageState extends ConsumerState<RecipeListPage> {
                     : IconButton(
                         onPressed: () {
                           _searchController.clear();
-                          ref.read(recipeListSearchKeywordProvider.notifier).state =
+                          ref
+                                  .read(
+                                    recipeListSearchKeywordProvider.notifier,
+                                  )
+                                  .state =
                               '';
                         },
                         icon: const Icon(Icons.clear),
                       ),
               ),
               onChanged: (value) {
-                ref.read(recipeListSearchKeywordProvider.notifier).state = value;
+                ref.read(recipeListSearchKeywordProvider.notifier).state =
+                    value;
               },
             ),
           ),
@@ -97,10 +102,8 @@ class _RecipeListPageState extends ConsumerState<RecipeListPage> {
                   },
                 );
               },
-              error: (error, stackTrace) => const EmptyStateView(
-                title: '列表加载失败',
-                description: '请稍后重试。',
-              ),
+              error: (error, stackTrace) =>
+                  const EmptyStateView(title: '列表加载失败', description: '请稍后重试。'),
               loading: () => const Center(child: CircularProgressIndicator()),
             ),
           ),
@@ -158,7 +161,6 @@ class _RecipeCard extends StatelessWidget {
         title: Text(recipe.name),
         subtitle: Text(
           [
-            if (recipe.category.isNotEmpty) recipe.category,
             '食材 ${recipe.ingredients.length} 项',
             '步骤 ${recipe.steps.length} 项',
           ].join(' · '),

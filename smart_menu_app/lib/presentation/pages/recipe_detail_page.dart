@@ -33,15 +33,8 @@ class RecipeDetailPage extends ConsumerWidget {
             children: <Widget>[
               _DetailSection(
                 title: recipe.name,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    if (recipe.category.isNotEmpty) Text('分类：${recipe.category}'),
-                    if (recipe.description.isNotEmpty) ...<Widget>[
-                      const SizedBox(height: 8),
-                      Text(recipe.description),
-                    ],
-                  ],
+                child: Text(
+                  '食材 ${recipe.ingredients.length} 项 · 步骤 ${recipe.steps.length} 项',
                 ),
               ),
               const SizedBox(height: 16),
@@ -51,7 +44,10 @@ class RecipeDetailPage extends ConsumerWidget {
                     ? const Text('暂未添加食材')
                     : Column(
                         children: recipe.ingredients
-                            .map((ingredient) => _IngredientTile(ingredient: ingredient))
+                            .map(
+                              (ingredient) =>
+                                  _IngredientTile(ingredient: ingredient),
+                            )
                             .toList(growable: false),
                       ),
               ),
@@ -96,10 +92,7 @@ class RecipeDetailPage extends ConsumerWidget {
 }
 
 class _DetailSection extends StatelessWidget {
-  const _DetailSection({
-    required this.title,
-    required this.child,
-  });
+  const _DetailSection({required this.title, required this.child});
 
   final String title;
   final Widget child;
@@ -129,31 +122,57 @@ class _IngredientTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final detailParts = <String>[
-      ingredient.type.label,
-      if (ingredient.scalable)
-        '参与计算'
-      else
-        '不参与计算',
-      '精度 ${ingredient.precision.value}',
-      ingredient.roundingMode.label,
-    ];
-
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      title: Text(ingredient.name),
-      subtitle: Text(detailParts.join(' · ')),
-      trailing: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.end,
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: Color(0x14000000))),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Text('${ingredient.amountText} ${ingredient.unit.label}'),
-          if (ingredient.remark.isNotEmpty)
-            Text(
-              ingredient.remark,
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: Text(
+                  ingredient.name,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ),
+              Text(
+                '${ingredient.amountText}${ingredient.unit.label}',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: <Widget>[
+              _IngredientMetaChip(value: ingredient.type.label),
+            ],
+          ),
         ],
+      ),
+    );
+  }
+}
+
+class _IngredientMetaChip extends StatelessWidget {
+  const _IngredientMetaChip({required this.value});
+
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        child: Text(value),
       ),
     );
   }

@@ -16,7 +16,6 @@ class IngredientFormData {
     this.precision = PrecisionOption.one,
     this.roundingMode = IngredientRoundingMode.floor,
     this.scalable = true,
-    this.isScaleTarget = false,
   });
 
   final TextEditingController nameController;
@@ -27,35 +26,26 @@ class IngredientFormData {
   PrecisionOption precision;
   IngredientRoundingMode roundingMode;
   bool scalable;
-  bool isScaleTarget;
 }
 
 class IngredientFormItem extends StatelessWidget {
   const IngredientFormItem({
     required this.index,
     required this.data,
-    required this.isEditMode,
-    required this.isAmountEditable,
     required this.onRemove,
     required this.onChanged,
-    required this.onScaleTargetChanged,
     super.key,
   });
 
   final int index;
   final IngredientFormData data;
-  final bool isEditMode;
-  final bool isAmountEditable;
   final VoidCallback onRemove;
   final VoidCallback onChanged;
-  final ValueChanged<bool?> onScaleTargetChanged;
 
   @override
   Widget build(BuildContext context) {
     final amountText = data.amountController.text.trim();
     final usesDescriptor = DecimalUtils.isDescriptorAmount(amountText);
-    final canUseScaleTarget =
-        isEditMode && data.scalable && DecimalUtils.tryParseAmount(amountText) != null;
 
     return Card(
       child: Padding(
@@ -79,6 +69,7 @@ class IngredientFormItem extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             TextFormField(
+              key: ValueKey<String>('ingredient_name_$index'),
               controller: data.nameController,
               decoration: const InputDecoration(labelText: '食材名称'),
               onChanged: (_) => onChanged(),
@@ -95,12 +86,9 @@ class IngredientFormItem extends StatelessWidget {
                 Expanded(
                   flex: 2,
                   child: TextFormField(
+                    key: ValueKey<String>('ingredient_amount_$index'),
                     controller: data.amountController,
-                    readOnly: !isAmountEditable,
-                    decoration: const InputDecoration(
-                      labelText: '用量',
-                      hintText: '例如：500 / 适量',
-                    ),
+                    decoration: const InputDecoration(labelText: '用量'),
                     onChanged: (_) => onChanged(),
                     validator: (value) {
                       final normalized = value?.trim() ?? '';
@@ -223,45 +211,17 @@ class IngredientFormItem extends StatelessWidget {
                   child: SwitchListTile(
                     contentPadding: EdgeInsets.zero,
                     title: const Text('参与比例计算'),
-                    subtitle: Text(usesDescriptor ? '描述型用量会自动关闭' : '可参与动态重算'),
                     value: usesDescriptor ? false : data.scalable,
                     onChanged: usesDescriptor
                         ? null
                         : (value) {
                             data.scalable = value;
-                            if (!value) {
-                              data.isScaleTarget = false;
-                            }
                             onChanged();
                           },
                   ),
                 ),
               ],
             ),
-            if (isEditMode)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: CheckboxListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: const Text('设为调整基准'),
-                  subtitle: Text(
-                    canUseScaleTarget
-                        ? '保存时将以这个食材的新用量作为比例基准'
-                        : '仅数值型且参与计算的食材可作为基准',
-                  ),
-                  value: data.isScaleTarget,
-                  onChanged:
-                      canUseScaleTarget ? onScaleTargetChanged : null,
-                ),
-              ),
-            if (isEditMode && data.scalable && !data.isScaleTarget)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Text(
-                  '当其他可计算食材被设为调整基准时，这个食材会在保存时自动计算。',
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-              ),
             TextFormField(
               controller: data.remarkController,
               decoration: const InputDecoration(labelText: '备注'),

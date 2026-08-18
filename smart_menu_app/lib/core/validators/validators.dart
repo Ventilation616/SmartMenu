@@ -1,9 +1,14 @@
+import 'dart:math';
+
 import 'package:decimal/decimal.dart';
+// ignore: depend_on_referenced_packages
+import 'package:rational/rational.dart';
 
 import '../../domain/models/ingredient.dart';
 import '../../domain/models/recipe.dart';
 import '../exceptions/app_exception.dart';
 import '../utils/decimal_utils.dart';
+import '../utils/rounding_utils.dart';
 
 class ScaleTargetSelection {
   const ScaleTargetSelection({
@@ -111,21 +116,20 @@ class Validators {
       }
     }
 
-    if (changedScalableIngredients.length > 1) {
-      throw ValidationException('同一时间只能有一个参与比例计算的食材作为调整基准');
-    }
-
     if (changedScalableIngredients.isEmpty) {
       return null;
     }
 
-    final selection = changedScalableIngredients.single;
-    final originalAmount =
-        selection.originalIngredient.amount ??
-        DecimalUtils.tryParseAmount(selection.originalIngredient.amountText);
-    final editedAmount =
-        selection.editedIngredient.amount ??
-        DecimalUtils.tryParseAmount(selection.editedIngredient.amountText);
+    final selection = changedScalableIngredients.length == 1
+        ? changedScalableIngredients.single
+        : _resolveScaleTargetByConsistentScale(changedScalableIngredients);
+
+    if (selection == null) {
+      throw ValidationException('同一时间只能有一个参与比例计算的食材作为调整基准');
+    }
+
+    final originalAmount = _getNumericAmount(selection.originalIngredient);
+    final editedAmount = _getNumericAmount(selection.editedIngredient);
 
     if (!selection.editedIngredient.scalable) {
       throw ValidationException('调整基准食材必须参与比例计算');
@@ -140,5 +144,71 @@ class Validators {
     }
 
     return selection;
+  }
+
+  static ScaleTargetSelection? _resolveScaleTargetByConsistentScale(
+    List<ScaleTargetSelection> changedScalableIngredients,
+  ) {
+    for (final candidate in changedScalableIngredients) {
+      final originalAmount = _getNumericAmount(candidate.originalIngredient);
+      final editedAmount = _getNumericAmount(candidate.editedIngredient);
+      if (originalAmount == null ||
+          originalAmount <= Decimal.zero ||
+          editedAmount == null ||
+          editedAmount < Decimal.zero) {
+        continue;
+      }
+
+      final scale = editedAmount / originalAmount;
+      final matchesAllScaledValues = changedScalableIngredients.every(
+        (selection) => _matchesScaledValue(
+          selection: selection,
+          target: candidate,
+          scale: scale,
+        ),
+      );
+
+      if (matchesAllScaledValues) {
+        return candidate;
+      }
+    }
+
+    return null;
+  }
+
+  static bool _matchesScaledValue({
+    required ScaleTargetSelection selection,
+    required ScaleTargetSelection target,
+    required Rational scale,
+  }) {
+    final originalAmount = _getNumericAmount(selection.originalIngredient);
+    final editedAmount = _getNumericAmount(selection.editedIngredient);
+    if (originalAmount == null || editedAmount == null) {
+      return false;
+    }
+
+    if (selection.editedIngredient.id == target.editedIngredient.id) {
+      return editedAmount == _getNumericAmount(target.editedIngredient);
+    }
+
+    final rawAmount = (originalAmount.toRational() * scale).toDecimal(
+      scaleOnInfinitePrecision: _calculationScale(selection.editedIngredient),
+    );
+    final expectedAmount = RoundingUtils.applyPrecision(
+      rawAmount,
+      precision: selection.editedIngredient.precision,
+      roundingMode: selection.editedIngredient.roundingMode,
+    );
+    return editedAmount == expectedAmount;
+  }
+
+  static Decimal? _getNumericAmount(Ingredient ingredient) {
+    return ingredient.amount ??
+        DecimalUtils.tryParseAmount(ingredient.amountText);
+  }
+
+  static int _calculationScale(Ingredient ingredient) {
+    final precisionScale = Decimal.parse(ingredient.precision.value).scale;
+    return max(precisionScale + 6, 8);
   }
 }

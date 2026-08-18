@@ -123,8 +123,6 @@ Recipe _buildRecipe() {
   return Recipe(
     id: 'recipe-1',
     name: '红烧鸡腿',
-    category: '家常菜',
-    description: '适合下饭',
     createdAt: DateTime(2026, 8, 18, 10),
     updatedAt: DateTime(2026, 8, 18, 10),
     ingredients: <Ingredient>[

@@ -27,30 +27,6 @@ class $RecipeEntitiesTable extends RecipeEntities
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _categoryMeta = const VerificationMeta(
-    'category',
-  );
-  @override
-  late final GeneratedColumn<String> category = GeneratedColumn<String>(
-    'category',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
-    defaultValue: const Constant(''),
-  );
-  static const VerificationMeta _descriptionMeta = const VerificationMeta(
-    'description',
-  );
-  @override
-  late final GeneratedColumn<String> description = GeneratedColumn<String>(
-    'description',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
-    defaultValue: const Constant(''),
-  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -74,14 +50,7 @@ class $RecipeEntitiesTable extends RecipeEntities
     requiredDuringInsert: true,
   );
   @override
-  List<GeneratedColumn> get $columns => [
-    id,
-    name,
-    category,
-    description,
-    createdAt,
-    updatedAt,
-  ];
+  List<GeneratedColumn> get $columns => [id, name, createdAt, updatedAt];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -106,21 +75,6 @@ class $RecipeEntitiesTable extends RecipeEntities
       );
     } else if (isInserting) {
       context.missing(_nameMeta);
-    }
-    if (data.containsKey('category')) {
-      context.handle(
-        _categoryMeta,
-        category.isAcceptableOrUnknown(data['category']!, _categoryMeta),
-      );
-    }
-    if (data.containsKey('description')) {
-      context.handle(
-        _descriptionMeta,
-        description.isAcceptableOrUnknown(
-          data['description']!,
-          _descriptionMeta,
-        ),
-      );
     }
     if (data.containsKey('created_at')) {
       context.handle(
@@ -155,14 +109,6 @@ class $RecipeEntitiesTable extends RecipeEntities
         DriftSqlType.string,
         data['${effectivePrefix}name'],
       )!,
-      category: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}category'],
-      )!,
-      description: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}description'],
-      )!,
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -183,15 +129,11 @@ class $RecipeEntitiesTable extends RecipeEntities
 class RecipeEntity extends DataClass implements Insertable<RecipeEntity> {
   final String id;
   final String name;
-  final String category;
-  final String description;
   final DateTime createdAt;
   final DateTime updatedAt;
   const RecipeEntity({
     required this.id,
     required this.name,
-    required this.category,
-    required this.description,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -200,8 +142,6 @@ class RecipeEntity extends DataClass implements Insertable<RecipeEntity> {
     final map = <String, Expression>{};
     map['id'] = Variable<String>(id);
     map['name'] = Variable<String>(name);
-    map['category'] = Variable<String>(category);
-    map['description'] = Variable<String>(description);
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     return map;
@@ -211,8 +151,6 @@ class RecipeEntity extends DataClass implements Insertable<RecipeEntity> {
     return RecipeEntitiesCompanion(
       id: Value(id),
       name: Value(name),
-      category: Value(category),
-      description: Value(description),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
     );
@@ -226,8 +164,6 @@ class RecipeEntity extends DataClass implements Insertable<RecipeEntity> {
     return RecipeEntity(
       id: serializer.fromJson<String>(json['id']),
       name: serializer.fromJson<String>(json['name']),
-      category: serializer.fromJson<String>(json['category']),
-      description: serializer.fromJson<String>(json['description']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
@@ -238,8 +174,6 @@ class RecipeEntity extends DataClass implements Insertable<RecipeEntity> {
     return <String, dynamic>{
       'id': serializer.toJson<String>(id),
       'name': serializer.toJson<String>(name),
-      'category': serializer.toJson<String>(category),
-      'description': serializer.toJson<String>(description),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
@@ -248,15 +182,11 @@ class RecipeEntity extends DataClass implements Insertable<RecipeEntity> {
   RecipeEntity copyWith({
     String? id,
     String? name,
-    String? category,
-    String? description,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) => RecipeEntity(
     id: id ?? this.id,
     name: name ?? this.name,
-    category: category ?? this.category,
-    description: description ?? this.description,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
   );
@@ -264,10 +194,6 @@ class RecipeEntity extends DataClass implements Insertable<RecipeEntity> {
     return RecipeEntity(
       id: data.id.present ? data.id.value : this.id,
       name: data.name.present ? data.name.value : this.name,
-      category: data.category.present ? data.category.value : this.category,
-      description: data.description.present
-          ? data.description.value
-          : this.description,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -278,8 +204,6 @@ class RecipeEntity extends DataClass implements Insertable<RecipeEntity> {
     return (StringBuffer('RecipeEntity(')
           ..write('id: $id, ')
           ..write('name: $name, ')
-          ..write('category: $category, ')
-          ..write('description: $description, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -287,16 +211,13 @@ class RecipeEntity extends DataClass implements Insertable<RecipeEntity> {
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, name, category, description, createdAt, updatedAt);
+  int get hashCode => Object.hash(id, name, createdAt, updatedAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is RecipeEntity &&
           other.id == this.id &&
           other.name == this.name &&
-          other.category == this.category &&
-          other.description == this.description &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
@@ -304,16 +225,12 @@ class RecipeEntity extends DataClass implements Insertable<RecipeEntity> {
 class RecipeEntitiesCompanion extends UpdateCompanion<RecipeEntity> {
   final Value<String> id;
   final Value<String> name;
-  final Value<String> category;
-  final Value<String> description;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
   const RecipeEntitiesCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
-    this.category = const Value.absent(),
-    this.description = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -321,8 +238,6 @@ class RecipeEntitiesCompanion extends UpdateCompanion<RecipeEntity> {
   RecipeEntitiesCompanion.insert({
     required String id,
     required String name,
-    this.category = const Value.absent(),
-    this.description = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
     this.rowid = const Value.absent(),
@@ -333,8 +248,6 @@ class RecipeEntitiesCompanion extends UpdateCompanion<RecipeEntity> {
   static Insertable<RecipeEntity> custom({
     Expression<String>? id,
     Expression<String>? name,
-    Expression<String>? category,
-    Expression<String>? description,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
@@ -342,8 +255,6 @@ class RecipeEntitiesCompanion extends UpdateCompanion<RecipeEntity> {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (name != null) 'name': name,
-      if (category != null) 'category': category,
-      if (description != null) 'description': description,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
@@ -353,8 +264,6 @@ class RecipeEntitiesCompanion extends UpdateCompanion<RecipeEntity> {
   RecipeEntitiesCompanion copyWith({
     Value<String>? id,
     Value<String>? name,
-    Value<String>? category,
-    Value<String>? description,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
@@ -362,8 +271,6 @@ class RecipeEntitiesCompanion extends UpdateCompanion<RecipeEntity> {
     return RecipeEntitiesCompanion(
       id: id ?? this.id,
       name: name ?? this.name,
-      category: category ?? this.category,
-      description: description ?? this.description,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
@@ -378,12 +285,6 @@ class RecipeEntitiesCompanion extends UpdateCompanion<RecipeEntity> {
     }
     if (name.present) {
       map['name'] = Variable<String>(name.value);
-    }
-    if (category.present) {
-      map['category'] = Variable<String>(category.value);
-    }
-    if (description.present) {
-      map['description'] = Variable<String>(description.value);
     }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
@@ -402,8 +303,6 @@ class RecipeEntitiesCompanion extends UpdateCompanion<RecipeEntity> {
     return (StringBuffer('RecipeEntitiesCompanion(')
           ..write('id: $id, ')
           ..write('name: $name, ')
-          ..write('category: $category, ')
-          ..write('description: $description, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
@@ -1471,8 +1370,6 @@ typedef $$RecipeEntitiesTableCreateCompanionBuilder =
     RecipeEntitiesCompanion Function({
       required String id,
       required String name,
-      Value<String> category,
-      Value<String> description,
       required DateTime createdAt,
       required DateTime updatedAt,
       Value<int> rowid,
@@ -1481,8 +1378,6 @@ typedef $$RecipeEntitiesTableUpdateCompanionBuilder =
     RecipeEntitiesCompanion Function({
       Value<String> id,
       Value<String> name,
-      Value<String> category,
-      Value<String> description,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<int> rowid,
@@ -1555,16 +1450,6 @@ class $$RecipeEntitiesTableFilterComposer
 
   ColumnFilters<String> get name => $composableBuilder(
     column: $table.name,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get category => $composableBuilder(
-    column: $table.category,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get description => $composableBuilder(
-    column: $table.description,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -1648,16 +1533,6 @@ class $$RecipeEntitiesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get category => $composableBuilder(
-    column: $table.category,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get description => $composableBuilder(
-    column: $table.description,
-    builder: (column) => ColumnOrderings(column),
-  );
-
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -1683,14 +1558,6 @@ class $$RecipeEntitiesTableAnnotationComposer
 
   GeneratedColumn<String> get name =>
       $composableBuilder(column: $table.name, builder: (column) => column);
-
-  GeneratedColumn<String> get category =>
-      $composableBuilder(column: $table.category, builder: (column) => column);
-
-  GeneratedColumn<String> get description => $composableBuilder(
-    column: $table.description,
-    builder: (column) => column,
-  );
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -1786,16 +1653,12 @@ class $$RecipeEntitiesTableTableManager
               ({
                 Value<String> id = const Value.absent(),
                 Value<String> name = const Value.absent(),
-                Value<String> category = const Value.absent(),
-                Value<String> description = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => RecipeEntitiesCompanion(
                 id: id,
                 name: name,
-                category: category,
-                description: description,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -1804,16 +1667,12 @@ class $$RecipeEntitiesTableTableManager
               ({
                 required String id,
                 required String name,
-                Value<String> category = const Value.absent(),
-                Value<String> description = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
                 Value<int> rowid = const Value.absent(),
               }) => RecipeEntitiesCompanion.insert(
                 id: id,
                 name: name,
-                category: category,
-                description: description,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,

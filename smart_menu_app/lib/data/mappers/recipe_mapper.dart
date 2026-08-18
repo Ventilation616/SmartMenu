@@ -21,8 +21,6 @@ class RecipeMapper {
     return Recipe(
       id: recipe.id,
       name: recipe.name,
-      category: recipe.category,
-      description: recipe.description,
       createdAt: recipe.createdAt,
       updatedAt: recipe.updatedAt,
       ingredients: ingredients.map(toDomainIngredient).toList(growable: false),
@@ -61,8 +59,6 @@ class RecipeMapper {
     return RecipeEntitiesCompanion(
       id: Value(recipe.id),
       name: Value(recipe.name),
-      category: Value(recipe.category),
-      description: Value(recipe.description),
       createdAt: Value(recipe.createdAt),
       updatedAt: Value(recipe.updatedAt),
     );

@@ -8,10 +8,6 @@ class RecipeEntities extends Table {
 
   TextColumn get name => text()();
 
-  TextColumn get category => text().withDefault(const Constant(''))();
-
-  TextColumn get description => text().withDefault(const Constant(''))();
-
   DateTimeColumn get createdAt => dateTime()();
 
   DateTimeColumn get updatedAt => dateTime()();

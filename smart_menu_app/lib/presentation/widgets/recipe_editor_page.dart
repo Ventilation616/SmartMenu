@@ -1,9 +1,13 @@
+import 'dart:math';
+
+import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/routes.dart';
 import '../../core/exceptions/app_exception.dart';
 import '../../core/utils/decimal_utils.dart';
+import '../../core/utils/rounding_utils.dart';
 import '../../domain/models/cooking_step.dart';
 import '../../domain/models/ingredient.dart';
 import '../../domain/models/recipe.dart';
@@ -39,12 +43,10 @@ class RecipeEditorPage extends StatefulWidget {
 class _RecipeEditorPageState extends State<RecipeEditorPage> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _nameController;
-  late final TextEditingController _categoryController;
-  late final TextEditingController _descriptionController;
-
   late final List<_IngredientDraft> _ingredients;
   late final List<_StepDraft> _steps;
-  String? _selectedScaleTargetId;
+  late final Map<_IngredientDraft, Decimal?> _lastNumericAmounts;
+  bool _isApplyingAutoScaling = false;
   bool _isSaving = false;
 
   @override
@@ -52,23 +54,23 @@ class _RecipeEditorPageState extends State<RecipeEditorPage> {
     super.initState();
     final recipe = widget.initialRecipe;
     _nameController = TextEditingController(text: recipe?.name ?? '');
-    _categoryController = TextEditingController(text: recipe?.category ?? '');
-    _descriptionController = TextEditingController(
-      text: recipe?.description ?? '',
-    );
     _ingredients = recipe == null
         ? <_IngredientDraft>[_IngredientDraft.empty()]
         : recipe.ingredients.map(_IngredientDraft.fromIngredient).toList();
     _steps = recipe == null
         ? <_StepDraft>[_StepDraft.empty()]
         : recipe.steps.map(_StepDraft.fromStep).toList();
+    _lastNumericAmounts = <_IngredientDraft, Decimal?>{
+      for (final ingredient in _ingredients)
+        ingredient: DecimalUtils.tryParseAmount(
+          ingredient.amountController.text.trim(),
+        ),
+    };
   }
 
   @override
   void dispose() {
     _nameController.dispose();
-    _categoryController.dispose();
-    _descriptionController.dispose();
     for (final ingredient in _ingredients) {
       ingredient.dispose();
     }
@@ -115,34 +117,13 @@ class _RecipeEditorPageState extends State<RecipeEditorPage> {
             const SizedBox(height: 16),
             TextFormField(
               controller: _nameController,
-              decoration: const InputDecoration(
-                labelText: '菜名',
-                hintText: '例如：红烧鸡腿',
-              ),
+              decoration: const InputDecoration(labelText: '菜名'),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
                   return '菜名不能为空';
                 }
                 return null;
               },
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _categoryController,
-              decoration: const InputDecoration(
-                labelText: '分类',
-                hintText: '例如：家常菜',
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _descriptionController,
-              minLines: 2,
-              maxLines: 3,
-              decoration: const InputDecoration(
-                labelText: '备注',
-                hintText: '记录口味、时间或注意事项',
-              ),
             ),
           ],
         ),
@@ -151,10 +132,6 @@ class _RecipeEditorPageState extends State<RecipeEditorPage> {
   }
 
   Widget _buildIngredientSection(BuildContext context) {
-    final selectedIngredient = _ingredients.where((ingredient) {
-      return ingredient.id == _selectedScaleTargetId;
-    }).firstOrNull;
-
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -172,77 +149,21 @@ class _RecipeEditorPageState extends State<RecipeEditorPage> {
                 ),
               ],
             ),
-            if (widget.isEditMode) ...<Widget>[
-              const SizedBox(height: 8),
-              Text(
-                selectedIngredient == null
-                    ? '当前未显式选择调整基准。保存时若只改动一个可计算食材，用例也会自动识别。'
-                    : '当前调整基准：${selectedIngredient.nameController.text.trim().isEmpty ? '未命名食材' : selectedIngredient.nameController.text.trim()}',
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-              if (selectedIngredient != null)
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: TextButton(
-                    onPressed: () {
-                      setState(() {
-                        _selectedScaleTargetId = null;
-                        for (final ingredient in _ingredients) {
-                          ingredient.isScaleTarget = false;
-                        }
-                      });
-                    },
-                    child: const Text('清除调整基准'),
-                  ),
-                ),
-            ],
             const SizedBox(height: 12),
             ..._ingredients.asMap().entries.map((entry) {
               final index = entry.key;
               final ingredient = entry.value;
-              final targetSelected = _selectedScaleTargetId != null;
-              final canEditAmount = !widget.isEditMode ||
-                  !targetSelected ||
-                  ingredient.id == _selectedScaleTargetId ||
-                  !ingredient.scalable;
 
               return Padding(
                 padding: const EdgeInsets.only(bottom: 12),
                 child: IngredientFormItem(
                   index: index,
                   data: ingredient,
-                  isEditMode: widget.isEditMode,
-                  isAmountEditable: canEditAmount,
                   onRemove: () => _removeIngredient(index),
-                  onChanged: () => setState(() {
-                    final amountText = ingredient.amountController.text.trim();
-                    if (DecimalUtils.isDescriptorAmount(amountText)) {
-                      ingredient.scalable = false;
-                      if (_selectedScaleTargetId == ingredient.id) {
-                        _selectedScaleTargetId = null;
-                        ingredient.isScaleTarget = false;
-                      }
-                    }
-                  }),
-                  onScaleTargetChanged: (value) {
-                    setState(() {
-                      if (!(value ?? false)) {
-                        return;
-                      }
-                      _selectedScaleTargetId = ingredient.id;
-                      for (final item in _ingredients) {
-                        item.isScaleTarget = item.id == ingredient.id;
-                      }
-                    });
-                  },
+                  onChanged: () => _handleIngredientChanged(ingredient),
                 ),
               );
             }),
-            if (_ingredients.isEmpty)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 12),
-                child: Text('还没有食材，先添加一项吧。'),
-              ),
           ],
         ),
       ),
@@ -280,11 +201,6 @@ class _RecipeEditorPageState extends State<RecipeEditorPage> {
                 ),
               );
             }),
-            if (_steps.isEmpty)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 12),
-                child: Text('暂未添加步骤，也可以直接保存。'),
-              ),
           ],
         ),
       ),
@@ -293,16 +209,16 @@ class _RecipeEditorPageState extends State<RecipeEditorPage> {
 
   void _addIngredient() {
     setState(() {
-      _ingredients.add(_IngredientDraft.empty());
+      final ingredient = _IngredientDraft.empty();
+      _ingredients.add(ingredient);
+      _lastNumericAmounts[ingredient] = null;
     });
   }
 
   void _removeIngredient(int index) {
     setState(() {
       final ingredient = _ingredients.removeAt(index);
-      if (_selectedScaleTargetId == ingredient.id) {
-        _selectedScaleTargetId = null;
-      }
+      _lastNumericAmounts.remove(ingredient);
       ingredient.dispose();
     });
   }
@@ -375,45 +291,131 @@ class _RecipeEditorPageState extends State<RecipeEditorPage> {
     context.pop();
   }
 
+  void _handleIngredientChanged(_IngredientDraft changedIngredient) {
+    setState(() {
+      final amountText = changedIngredient.amountController.text.trim();
+      if (DecimalUtils.isDescriptorAmount(amountText)) {
+        changedIngredient.scalable = false;
+      }
+
+      final currentAmount = DecimalUtils.tryParseAmount(amountText);
+      final previousAmount = _lastNumericAmounts[changedIngredient];
+      _lastNumericAmounts[changedIngredient] = currentAmount;
+
+      if (_isApplyingAutoScaling ||
+          !changedIngredient.scalable ||
+          currentAmount == null ||
+          previousAmount == null ||
+          currentAmount == previousAmount ||
+          previousAmount <= Decimal.zero) {
+        return;
+      }
+
+      _applyAutomaticScaling(
+        target: changedIngredient,
+        originalAmount: previousAmount,
+        updatedAmount: currentAmount,
+      );
+    });
+  }
+
+  void _applyAutomaticScaling({
+    required _IngredientDraft target,
+    required Decimal originalAmount,
+    required Decimal updatedAmount,
+  }) {
+    _isApplyingAutoScaling = true;
+    try {
+      final scale = updatedAmount / originalAmount;
+      for (final ingredient in _ingredients) {
+        if (identical(ingredient, target)) {
+          _lastNumericAmounts[ingredient] = updatedAmount;
+          continue;
+        }
+
+        final amountText = ingredient.amountController.text.trim();
+        if (!ingredient.scalable ||
+            DecimalUtils.isDescriptorAmount(amountText)) {
+          _lastNumericAmounts[ingredient] = DecimalUtils.tryParseAmount(
+            amountText,
+          );
+          continue;
+        }
+
+        final baseAmount = _lastNumericAmounts[ingredient];
+        if (baseAmount == null) {
+          continue;
+        }
+
+        final rawAmount = (baseAmount.toRational() * scale).toDecimal(
+          scaleOnInfinitePrecision: _calculationScale(ingredient),
+        );
+        final roundedAmount = RoundingUtils.applyPrecision(
+          rawAmount,
+          precision: ingredient.precision,
+          roundingMode: ingredient.roundingMode,
+        );
+        final normalizedText = DecimalUtils.formatDecimal(roundedAmount);
+
+        ingredient.amountController.value = TextEditingValue(
+          text: normalizedText,
+          selection: TextSelection.collapsed(offset: normalizedText.length),
+        );
+        _lastNumericAmounts[ingredient] = roundedAmount;
+      }
+    } finally {
+      _isApplyingAutoScaling = false;
+    }
+  }
+
+  int _calculationScale(_IngredientDraft ingredient) {
+    final precisionScale = Decimal.parse(ingredient.precision.value).scale;
+    return max(precisionScale + 6, 8);
+  }
+
   Recipe _buildRecipeDraft() {
     final now = DateTime.now();
 
     return Recipe(
       id: widget.initialRecipe?.id ?? '',
       name: _nameController.text.trim(),
-      category: _categoryController.text.trim(),
-      description: _descriptionController.text.trim(),
       createdAt: widget.initialRecipe?.createdAt ?? now,
       updatedAt: widget.initialRecipe?.updatedAt ?? now,
-      ingredients: _ingredients.map((ingredient) {
-        final amountText = ingredient.amountController.text.trim();
-        final amount = DecimalUtils.tryParseAmount(amountText);
-        return Ingredient(
-          id: ingredient.id,
-          name: ingredient.nameController.text.trim(),
-          amount: amount,
-          amountText: amountText,
-          unit: ingredient.unit,
-          type: ingredient.type,
-          scalable: DecimalUtils.isDescriptorAmount(amountText)
-              ? false
-              : ingredient.scalable,
-          precision: ingredient.precision,
-          roundingMode: ingredient.roundingMode,
-          sortOrder: ingredient.sortOrder,
-          remark: ingredient.remarkController.text.trim(),
-        );
-      }).toList(growable: false),
-      steps: _steps.asMap().entries.map((entry) {
-        final index = entry.key;
-        final step = entry.value;
-        return CookingStep(
-          id: step.id,
-          stepNo: index + 1,
-          content: step.controller.text.trim(),
-          sortOrder: index,
-        );
-      }).toList(growable: false),
+      ingredients: _ingredients
+          .map((ingredient) {
+            final amountText = ingredient.amountController.text.trim();
+            final amount = DecimalUtils.tryParseAmount(amountText);
+            return Ingredient(
+              id: ingredient.id,
+              name: ingredient.nameController.text.trim(),
+              amount: amount,
+              amountText: amountText,
+              unit: ingredient.unit,
+              type: ingredient.type,
+              scalable: DecimalUtils.isDescriptorAmount(amountText)
+                  ? false
+                  : ingredient.scalable,
+              precision: ingredient.precision,
+              roundingMode: ingredient.roundingMode,
+              sortOrder: ingredient.sortOrder,
+              remark: ingredient.remarkController.text.trim(),
+            );
+          })
+          .toList(growable: false),
+      steps: _steps
+          .asMap()
+          .entries
+          .map((entry) {
+            final index = entry.key;
+            final step = entry.value;
+            return CookingStep(
+              id: step.id,
+              stepNo: index + 1,
+              content: step.controller.text.trim(),
+              sortOrder: index,
+            );
+          })
+          .toList(growable: false),
     );
   }
 }
@@ -473,16 +475,10 @@ class _IngredientDraft extends IngredientFormData {
 }
 
 class _StepDraft {
-  _StepDraft({
-    required this.id,
-    required this.controller,
-  });
+  _StepDraft({required this.id, required this.controller});
 
   factory _StepDraft.empty() {
-    return _StepDraft(
-      id: '',
-      controller: TextEditingController(),
-    );
+    return _StepDraft(id: '', controller: TextEditingController());
   }
 
   factory _StepDraft.fromStep(CookingStep step) {
@@ -498,8 +494,4 @@ class _StepDraft {
   void dispose() {
     controller.dispose();
   }
-}
-
-extension<T> on Iterable<T> {
-  T? get firstOrNull => isEmpty ? null : first;
 }

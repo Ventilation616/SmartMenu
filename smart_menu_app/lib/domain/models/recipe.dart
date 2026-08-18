@@ -11,8 +11,6 @@ abstract class Recipe with _$Recipe {
   const factory Recipe({
     required String id,
     required String name,
-    @Default('') String category,
-    @Default('') String description,
     required DateTime createdAt,
     required DateTime updatedAt,
     @Default(<Ingredient>[]) List<Ingredient> ingredients,

@@ -50,9 +50,7 @@ final deleteRecipeUseCaseProvider = Provider<DeleteRecipeUseCase>((ref) {
   return DeleteRecipeUseCase(ref.watch(recipeRepositoryProvider));
 });
 
-final recipeListSearchKeywordProvider = StateProvider<String>(
-  (ref) => '',
-);
+final recipeListSearchKeywordProvider = StateProvider<String>((ref) => '');
 
 final recipeListProvider = FutureProvider<List<Recipe>>((ref) async {
   final keyword = ref.watch(recipeListSearchKeywordProvider).trim();

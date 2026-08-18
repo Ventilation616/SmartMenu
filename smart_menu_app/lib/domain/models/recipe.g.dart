@@ -9,8 +9,6 @@ part of 'recipe.dart';
 _Recipe _$RecipeFromJson(Map<String, dynamic> json) => _Recipe(
   id: json['id'] as String,
   name: json['name'] as String,
-  category: json['category'] as String? ?? '',
-  description: json['description'] as String? ?? '',
   createdAt: DateTime.parse(json['createdAt'] as String),
   updatedAt: DateTime.parse(json['updatedAt'] as String),
   ingredients:
@@ -28,8 +26,6 @@ _Recipe _$RecipeFromJson(Map<String, dynamic> json) => _Recipe(
 Map<String, dynamic> _$RecipeToJson(_Recipe instance) => <String, dynamic>{
   'id': instance.id,
   'name': instance.name,
-  'category': instance.category,
-  'description': instance.description,
   'createdAt': instance.createdAt.toIso8601String(),
   'updatedAt': instance.updatedAt.toIso8601String(),
   'ingredients': instance.ingredients.map((e) => e.toJson()).toList(),

@@ -47,8 +47,6 @@ class RecipeInputPreparer {
     return recipe.copyWith(
       id: recipeId,
       name: recipe.name.trim(),
-      category: recipe.category.trim(),
-      description: recipe.description.trim(),
       createdAt: createdAt,
       updatedAt: now,
       ingredients: _prepareIngredients(recipe.ingredients, uuid),

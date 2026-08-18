@@ -31,11 +31,17 @@ class AppDatabase extends _$AppDatabase {
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
+    onUpgrade: (migrator, from, to) async {
+      if (from < 2) {
+        await customStatement('ALTER TABLE recipes DROP COLUMN category');
+        await customStatement('ALTER TABLE recipes DROP COLUMN description');
+      }
+    },
     beforeOpen: (details) async {
       await customStatement('PRAGMA foreign_keys = ON');
     },
   );
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 }

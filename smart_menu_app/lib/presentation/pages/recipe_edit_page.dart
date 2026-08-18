@@ -35,10 +35,7 @@ class RecipeEditPage extends ConsumerWidget {
           initialRecipe: recipe,
           onSubmit: (draft) async {
             final savedRecipe = await ref.read(updateRecipeUseCaseProvider)(
-              UpdateRecipeCommand(
-                originalRecipe: recipe,
-                editedRecipe: draft,
-              ),
+              UpdateRecipeCommand(originalRecipe: recipe, editedRecipe: draft),
             );
             ref.invalidate(recipeListProvider);
             ref.invalidate(recipeDetailProvider(recipeId));
@@ -55,9 +52,8 @@ class RecipeEditPage extends ConsumerWidget {
           ),
         );
       },
-      loading: () => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      ),
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
     );
   }
 }

@@ -121,6 +121,83 @@ void main() {
       expect(repository.savedRecipe, equals(savedRecipe));
     });
 
+    test('界面已联动更新多个可计算食材时仍能识别调整基准', () async {
+      final repository = InMemoryRecipeRepository();
+      final useCase = UpdateRecipeUseCase(
+        repository,
+        now: () => DateTime(2026, 8, 18, 13),
+      );
+
+      final originalRecipe = _buildRecipe(
+        id: 'recipe-3',
+        ingredients: <Ingredient>[
+          _buildIngredient(
+            id: 'i-1',
+            name: '鸡腿',
+            amount: Decimal.parse('500'),
+            amountText: '500',
+            precision: PrecisionOption.one,
+          ),
+          _buildIngredient(
+            id: 'i-2',
+            name: '土豆',
+            amount: Decimal.parse('300'),
+            amountText: '300',
+            precision: PrecisionOption.one,
+          ),
+          _buildIngredient(
+            id: 'i-3',
+            name: '盐',
+            amount: Decimal.parse('5'),
+            amountText: '5',
+            precision: PrecisionOption.tenth,
+            roundingMode: IngredientRoundingMode.ceil,
+          ),
+          _buildIngredient(
+            id: 'i-4',
+            name: '生抽',
+            amount: Decimal.parse('30'),
+            amountText: '30',
+            unit: IngredientUnit.milliliter,
+            precision: PrecisionOption.half,
+          ),
+        ],
+      );
+
+      final editedRecipe = originalRecipe.copyWith(
+        ingredients: <Ingredient>[
+          originalRecipe.ingredients[0].copyWith(
+            amount: Decimal.parse('777'),
+            amountText: '777',
+          ),
+          originalRecipe.ingredients[1].copyWith(
+            amount: Decimal.parse('466'),
+            amountText: '466',
+          ),
+          originalRecipe.ingredients[2].copyWith(
+            amount: Decimal.parse('7.8'),
+            amountText: '7.8',
+          ),
+          originalRecipe.ingredients[3].copyWith(
+            amount: Decimal.parse('46.5'),
+            amountText: '46.5',
+          ),
+        ],
+      );
+
+      final savedRecipe = await useCase(
+        UpdateRecipeCommand(
+          originalRecipe: originalRecipe,
+          editedRecipe: editedRecipe,
+        ),
+      );
+
+      expect(savedRecipe.ingredients[0].amountText, '777');
+      expect(savedRecipe.ingredients[1].amountText, '466');
+      expect(savedRecipe.ingredients[2].amountText, '7.8');
+      expect(savedRecipe.ingredients[3].amountText, '46.5');
+    });
+
     test('同时手动修改多个可计算食材时报错', () async {
       final repository = InMemoryRecipeRepository();
       final useCase = UpdateRecipeUseCase(repository);
@@ -202,8 +279,6 @@ Recipe _buildRecipe({
   return Recipe(
     id: id,
     name: '红烧鸡腿',
-    category: '家常菜',
-    description: '测试数据',
     createdAt: DateTime(2026, 8, 18, 10),
     updatedAt: DateTime(2026, 8, 18, 10),
     ingredients: ingredients,
