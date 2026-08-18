@@ -2,6 +2,11 @@
 
 智能菜单，根据你的现实食材用量动态调整所有配方比例。
 
+## 下载
+
+# 安卓
+https://github.com/Ventilation616/SmartMenu/releases/download/v1.0.0/SmartMenu-v1.0.0.apk
+
 ## 仓库结构
 
 - `docs/`：需求、技术栈与任务拆分文档
