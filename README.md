@@ -42,6 +42,7 @@
 - 基础页面启动验证与 README 运行说明补齐
 - 已接入自定义应用图标（来源：`smart_menu_app/imgs/image.png`）
 - Android `release` APK 已按最新图标重新打包
+- Flutter 应用名与 Android 显示名称已统一调整为“灵谱”
 
 ## M5 验证结果
 
