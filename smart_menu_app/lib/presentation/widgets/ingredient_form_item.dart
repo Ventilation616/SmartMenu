@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/constants/app_colors.dart';
 import '../../core/utils/decimal_utils.dart';
 import '../../domain/value_objects/ingredient_type.dart';
 import '../../domain/value_objects/ingredient_unit.dart';
@@ -181,6 +182,7 @@ class IngredientFormItem extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 Expanded(
                   child: DropdownButtonFormField<IngredientRoundingMode>(
@@ -208,9 +210,8 @@ class IngredientFormItem extends StatelessWidget {
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: SwitchListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: const Text('参与比例计算'),
+                  child: _ScalingSwitchField(
+                    usesDescriptor: usesDescriptor,
                     value: usesDescriptor ? false : data.scalable,
                     onChanged: usesDescriptor
                         ? null
@@ -222,12 +223,55 @@ class IngredientFormItem extends StatelessWidget {
                 ),
               ],
             ),
+            const SizedBox(height: 12),
             TextFormField(
               controller: data.remarkController,
               decoration: const InputDecoration(labelText: '备注'),
               minLines: 1,
               maxLines: 2,
               onChanged: (_) => onChanged(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ScalingSwitchField extends StatelessWidget {
+  const _ScalingSwitchField({
+    required this.usesDescriptor,
+    required this.value,
+    required this.onChanged,
+  });
+
+  final bool usesDescriptor;
+  final bool value;
+  final ValueChanged<bool>? onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onChanged == null ? null : () => onChanged!(!value),
+      borderRadius: BorderRadius.circular(12),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 48),
+        child: Row(
+          children: <Widget>[
+            Checkbox(
+              value: value,
+              onChanged: onChanged == null
+                  ? null
+                  : (checked) => onChanged!(checked ?? false),
+              activeColor: AppColors.accent,
+            ),
+            Expanded(
+              child: Text(
+                '动态计算',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: onChanged == null ? AppColors.muted : null,
+                ),
+              ),
             ),
           ],
         ),
