@@ -1,20 +1,23 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
+
 import 'cooking_step.dart';
 import 'ingredient.dart';
 
-class Recipe {
-  const Recipe({
-    required this.id,
-    required this.name,
-    required this.category,
-    required this.description,
-    required this.ingredients,
-    required this.steps,
-  });
+part 'recipe.freezed.dart';
+part 'recipe.g.dart';
 
-  final String id;
-  final String name;
-  final String category;
-  final String description;
-  final List<Ingredient> ingredients;
-  final List<CookingStep> steps;
+@freezed
+abstract class Recipe with _$Recipe {
+  const factory Recipe({
+    required String id,
+    required String name,
+    @Default('') String category,
+    @Default('') String description,
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    @Default(<Ingredient>[]) List<Ingredient> ingredients,
+    @Default(<CookingStep>[]) List<CookingStep> steps,
+  }) = _Recipe;
+
+  factory Recipe.fromJson(Map<String, dynamic> json) => _$RecipeFromJson(json);
 }

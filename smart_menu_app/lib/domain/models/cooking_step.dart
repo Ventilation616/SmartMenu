@@ -1,11 +1,17 @@
-class CookingStep {
-  const CookingStep({
-    required this.id,
-    required this.stepNo,
-    required this.content,
-  });
+import 'package:freezed_annotation/freezed_annotation.dart';
 
-  final String id;
-  final int stepNo;
-  final String content;
+part 'cooking_step.freezed.dart';
+part 'cooking_step.g.dart';
+
+@freezed
+abstract class CookingStep with _$CookingStep {
+  const factory CookingStep({
+    required String id,
+    required int stepNo,
+    required String content,
+    @Default(0) int sortOrder,
+  }) = _CookingStep;
+
+  factory CookingStep.fromJson(Map<String, dynamic> json) =>
+      _$CookingStepFromJson(json);
 }
